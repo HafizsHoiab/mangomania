@@ -1,15 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { createBaseQueryWithReauth } from './baseQuery.js'
 
 export const cartApi = createApi({
   reducerPath: 'cartApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/cart',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.accessToken
-      if (token) headers.set('authorization', `Bearer ${token}`)
-      return headers
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/cart'),
   tagTypes: ['Cart'],
   endpoints: (builder) => ({
     getCart: builder.query({ query: () => '/', providesTags: ['Cart'] }),

@@ -1,15 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { createBaseQueryWithReauth } from './baseQuery.js'
 
 export const paymentApi = createApi({
   reducerPath: 'paymentApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/payments',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.accessToken
-      if (token) headers.set('authorization', `Bearer ${token}`)
-      return headers
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/payments'),
   endpoints: (builder) => ({
     initiateJazzCash: builder.mutation({
       query: (data) => ({ url: '/jazzcash', method: 'POST', body: data }),

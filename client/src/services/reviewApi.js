@@ -1,15 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { createBaseQueryWithReauth } from './baseQuery.js'
 
 export const reviewApi = createApi({
   reducerPath: 'reviewApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/reviews',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.accessToken
-      if (token) headers.set('authorization', `Bearer ${token}`)
-      return headers
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/reviews'),
   tagTypes: ['Review'],
   endpoints: (builder) => ({
     getProductReviews: builder.query({ query: (productId) => `/${productId}`, providesTags: ['Review'] }),

@@ -1,15 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { createBaseQueryWithReauth } from './baseQuery.js'
 
 export const orderApi = createApi({
   reducerPath: 'orderApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/orders',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.accessToken
-      if (token) headers.set('authorization', `Bearer ${token}`)
-      return headers
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/orders'),
   tagTypes: ['Order'],
   endpoints: (builder) => ({
     placeOrder: builder.mutation({ query: (data) => ({ url: '/', method: 'POST', body: data }), invalidatesTags: ['Order'] }),
