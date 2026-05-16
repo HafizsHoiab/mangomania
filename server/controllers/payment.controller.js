@@ -4,7 +4,6 @@ let stripe;
 try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); } catch(e) {}
 
 const generateJazzCashHash = (params, integrityKey) => {
-  // JazzCash hash: sort all keys alphabetically, include ALL values (even empty strings)
   const sortedKeys = Object.keys(params).sort();
   const hashString = integrityKey + '&' + sortedKeys.map((k) => params[k]).join('&');
   return crypto.createHmac('sha256', integrityKey).update(hashString).digest('hex').toUpperCase();
@@ -53,6 +52,8 @@ exports.initiateJazzCash = async (req, res, next) => {
       pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID,
       pp_SubMerchantID: '',
       pp_Password: process.env.JAZZCASH_PASSWORD,
+      pp_BankID: 'TBANK',
+      pp_ProductID: 'RETL',
       pp_TxnRefNo: txnRefNo,
       pp_Amount: amountInPaisa,
       pp_TxnCurrency: 'PKR',
