@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { usePlaceOrderMutation } from '../services/orderApi.js'
+import { useInitiateJazzCashMutation } from '../services/paymentApi.js'
 import { useCart } from '../hooks/useCart.js'
 import CheckoutSteps from '../components/checkout/CheckoutSteps.jsx'
 import AddressForm from '../components/checkout/AddressForm.jsx'
@@ -23,6 +24,7 @@ export default function CheckoutPage() {
   const { coupon, total } = location.state || {}
   const user = useSelector((s) => s.auth.user)
   const [placeOrder] = usePlaceOrderMutation()
+  const [initiateJazzCash] = useInitiateJazzCashMutation()
 
   const handleAddressSubmit = (data) => {
     setAddress(data)
@@ -32,15 +34,45 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (extraData = {}) => {
     setIsPlacing(true)
     try {
+      // Step 1: Place the order
       const res = await placeOrder({
         shippingAddress: address,
         paymentMethod,
         couponCode: coupon?.code,
         items: items.map((i) => ({ productId: i.product._id, qty: i.qty, variant: i.variant })),
-        ...extraData,
       }).unwrap()
+
+      const order = res.data
       clearAllCart()
-      navigate('/order-success', { state: { order: res.data } })
+
+      // Step 2: Handle JazzCash redirect
+      if (paymentMethod === 'jazzcash' && extraData.mobileNumber) {
+        const jcRes = await initiateJazzCash({
+          orderId: order._id,
+          amount: order.totalAmount,
+          mobileNumber: extraData.mobileNumber,
+        }).unwrap()
+
+        const { params, postURL } = jcRes.data
+
+        // Create a hidden form and submit to JazzCash
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = postURL
+        Object.entries(params).forEach(([key, value]) => {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = value
+          form.appendChild(input)
+        })
+        document.body.appendChild(form)
+        form.submit()
+        return
+      }
+
+      // Step 3: For COD and other methods go to success page
+      navigate('/order-success', { state: { order } })
     } catch (err) {
       toast.error(err?.data?.message || 'Failed to place order')
     } finally {
@@ -89,7 +121,7 @@ export default function CheckoutPage() {
               <PaymentOptions selected={paymentMethod} onSelect={setPaymentMethod} />
 
               {paymentMethod === 'jazzcash' && (
-                <JazzCashForm onSubmit={() => handlePlaceOrder()} isLoading={isPlacing} />
+                <JazzCashForm onSubmit={(data) => handlePlaceOrder({ mobileNumber: data.mobileNumber })} isLoading={isPlacing} />
               )}
               {paymentMethod === 'easypaisa' && (
                 <EasyPaisaForm onSubmit={() => handlePlaceOrder()} isLoading={isPlacing} />
