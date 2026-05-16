@@ -1,6 +1,11 @@
 const transporter = require('../config/nodemailer');
 
 const sendEmail = async ({ to, subject, html }) => {
+  // Skip silently if email credentials are not configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('Email skipped — EMAIL_USER/EMAIL_PASS not configured');
+    return;
+  }
   try {
     await transporter.sendMail({
       from: `"Mango Mania 🥭" <${process.env.EMAIL_USER}>`,
