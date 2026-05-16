@@ -71,9 +71,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-4 p-3 bg-mango/10 rounded-xl text-xs text-center text-gray-600">
-            <strong>Demo:</strong> admin@mangomania.pk / admin123
-          </div>
         </div>
       </div>
     </div>
