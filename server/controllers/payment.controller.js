@@ -4,15 +4,9 @@ let stripe;
 try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); } catch(e) {}
 
 const generateJazzCashHash = (params, integrityKey) => {
-  // Sort keys and exclude empty/null values — JazzCash rejects hashes that include empty fields
+  // JazzCash hash: sort all keys alphabetically, include ALL values (even empty strings)
   const sortedKeys = Object.keys(params).sort();
-  const hashString =
-    integrityKey +
-    '&' +
-    sortedKeys
-      .filter((k) => params[k] !== '' && params[k] !== null && params[k] !== undefined)
-      .map((k) => params[k])
-      .join('&');
+  const hashString = integrityKey + '&' + sortedKeys.map((k) => params[k]).join('&');
   return crypto.createHmac('sha256', integrityKey).update(hashString).digest('hex').toUpperCase();
 };
 
@@ -52,12 +46,12 @@ exports.initiateJazzCash = async (req, res, next) => {
 
     const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
 
-    // Only include non-empty fields — empty fields break the hash
     const params = {
       pp_Version: '1.1',
       pp_TxnType: 'MWALLET',
       pp_Language: 'EN',
       pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID,
+      pp_SubMerchantID: '',
       pp_Password: process.env.JAZZCASH_PASSWORD,
       pp_TxnRefNo: txnRefNo,
       pp_Amount: amountInPaisa,
@@ -195,7 +189,6 @@ exports.jazzCashIPN = async (req, res, next) => {
     // Verify the hash to make sure request is genuinely from JazzCash
     const params = { ...data };
     delete params.pp_SecureHash;
-    delete params.pp_ResponseMessage; // exclude response message from hash check
     const expectedHash = generateJazzCashHash(params, process.env.JAZZCASH_INTEGRITY_SALT);
 
     if (receivedHash !== expectedHash) {
