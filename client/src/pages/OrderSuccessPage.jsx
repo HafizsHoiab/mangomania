@@ -1,11 +1,64 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { formatPrice } from '../utils/formatPrice.js'
 import { generateOrderId } from '../utils/helpers.js'
-import { formatDate } from '../utils/formatDate.js'
 
 export default function OrderSuccessPage() {
   const { state } = useLocation()
-  const order = state?.order
+  const [searchParams] = useSearchParams()
+  const [order, setOrder] = useState(state?.order || null)
+  const [loading, setLoading] = useState(false)
+  const [paymentFailed, setPaymentFailed] = useState(false)
+
+  const orderId = searchParams.get('orderId')
+  const status = searchParams.get('status')
+
+  useEffect(() => {
+    // JazzCash redirect — fetch order from API using orderId in URL
+    if (orderId && !order) {
+      if (status === 'failed') {
+        setPaymentFailed(true)
+        return
+      }
+      setLoading(true)
+      fetch(`/api/orders/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('mangoAccessToken')}`,
+        },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data?.data) setOrder(data.data)
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    }
+  }, [orderId, status])
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="text-6xl mb-4 animate-spin">🥭</div>
+        <p className="text-gray-500 text-lg">Loading your order...</p>
+      </div>
+    )
+  }
+
+  if (paymentFailed) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="text-8xl mb-6">❌</div>
+        <h1 className="font-display text-4xl font-bold text-dark mb-3">Payment Failed</h1>
+        <p className="text-gray-500 text-lg mb-8">
+          Your JazzCash payment was not completed. Your order has been saved — please try again.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/checkout" className="btn-primary">Try Again</Link>
+          <Link to="/orders" className="btn-outline">My Orders</Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">

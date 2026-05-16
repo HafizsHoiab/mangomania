@@ -4,8 +4,15 @@ let stripe;
 try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); } catch(e) {}
 
 const generateJazzCashHash = (params, integrityKey) => {
+  // Sort keys and exclude empty/null values — JazzCash rejects hashes that include empty fields
   const sortedKeys = Object.keys(params).sort();
-  const hashString = integrityKey + '&' + sortedKeys.map(k => params[k]).join('&');
+  const hashString =
+    integrityKey +
+    '&' +
+    sortedKeys
+      .filter((k) => params[k] !== '' && params[k] !== null && params[k] !== undefined)
+      .map((k) => params[k])
+      .join('&');
   return crypto.createHmac('sha256', integrityKey).update(hashString).digest('hex').toUpperCase();
 };
 
@@ -15,33 +22,51 @@ exports.initiateJazzCash = async (req, res, next) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
-    const dateTime = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
-    const expiryDate = new Date(Date.now() + 3600000).toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+    // Format datetime as YYYYMMDDHHmmss (local PKT = UTC+5)
+    const now = new Date(Date.now() + 5 * 60 * 60 * 1000); // shift to PKT
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateTime =
+      now.getUTCFullYear().toString() +
+      pad(now.getUTCMonth() + 1) +
+      pad(now.getUTCDate()) +
+      pad(now.getUTCHours()) +
+      pad(now.getUTCMinutes()) +
+      pad(now.getUTCSeconds());
+
+    const expiry = new Date(Date.now() + 5 * 60 * 60 * 1000 + 3600000);
+    const expiryDate =
+      expiry.getUTCFullYear().toString() +
+      pad(expiry.getUTCMonth() + 1) +
+      pad(expiry.getUTCDate()) +
+      pad(expiry.getUTCHours()) +
+      pad(expiry.getUTCMinutes()) +
+      pad(expiry.getUTCSeconds());
+
     const txnRefNo = `T${dateTime}`;
-    const amountInPaisa = Math.round(amount * 100);
+    const amountInPaisa = Math.round(amount * 100).toString();
 
     const isSandbox = process.env.JAZZCASH_ENV !== 'live';
     const postURL = isSandbox
       ? 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/'
       : 'https://payments.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
 
+    const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
+
+    // Only include non-empty fields — empty fields break the hash
     const params = {
       pp_Version: '1.1',
       pp_TxnType: 'MWALLET',
       pp_Language: 'EN',
       pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID,
-      pp_SubMerchantID: '',
       pp_Password: process.env.JAZZCASH_PASSWORD,
-      pp_BankID: 'TBANK',
-      pp_ProductID: 'RETL',
       pp_TxnRefNo: txnRefNo,
-      pp_Amount: amountInPaisa.toString(),
+      pp_Amount: amountInPaisa,
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: dateTime,
       pp_BillReference: `ORD-${orderId.toString().slice(-8)}`,
       pp_Description: 'Mango Mania Order',
       pp_TxnExpiryDateTime: expiryDate,
-      pp_ReturnURL: `${process.env.CLIENT_URL}/order-success?orderId=${orderId}`,
+      pp_ReturnURL: `${process.env.SERVER_URL || 'https://mangomania-production.up.railway.app'}/api/payments/jazzcash/return`,
       pp_MobileNumber: mobileNumber,
     };
 
@@ -49,6 +74,9 @@ exports.initiateJazzCash = async (req, res, next) => {
 
     order.paymentTransactionId = txnRefNo;
     await order.save();
+
+    console.log('JazzCash params:', JSON.stringify(params, null, 2));
+    console.log('JazzCash postURL:', postURL);
 
     res.json({
       success: true,
@@ -129,6 +157,36 @@ exports.verifyPayment = async (req, res, next) => {
   }
 };
 
+// JazzCash redirects the browser here after payment (POST)
+exports.jazzCashReturn = async (req, res, next) => {
+  try {
+    const data = req.body;
+    const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
+    const responseCode = data.pp_ResponseCode;
+    const txnRefNo = data.pp_TxnRefNo;
+
+    const order = await Order.findOne({ paymentTransactionId: txnRefNo });
+
+    if (order && responseCode === '000') {
+      order.paymentStatus = 'paid';
+      order.orderStatus = order.isPreOrder ? 'pre_order' : 'confirmed';
+      order.statusHistory.push({
+        status: order.isPreOrder ? 'pre_order' : 'confirmed',
+        message: `Payment received via JazzCash (Txn: ${txnRefNo})`,
+      });
+      await order.save();
+      return res.redirect(`${clientURL}/order-success?orderId=${order._id}&status=paid`);
+    }
+
+    // Payment failed or cancelled
+    const orderId = order ? order._id : '';
+    return res.redirect(`${clientURL}/order-success?orderId=${orderId}&status=failed`);
+  } catch (error) {
+    const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
+    return res.redirect(`${clientURL}/order-success?status=error`);
+  }
+};
+
 exports.jazzCashIPN = async (req, res, next) => {
   try {
     const data = req.body;
@@ -137,6 +195,7 @@ exports.jazzCashIPN = async (req, res, next) => {
     // Verify the hash to make sure request is genuinely from JazzCash
     const params = { ...data };
     delete params.pp_SecureHash;
+    delete params.pp_ResponseMessage; // exclude response message from hash check
     const expectedHash = generateJazzCashHash(params, process.env.JAZZCASH_INTEGRITY_SALT);
 
     if (receivedHash !== expectedHash) {
