@@ -50,9 +50,8 @@ export default function CheckoutPage() {
       }).unwrap()
 
       const order = res.data
-      clearAllCart()
 
-      // Step 2: Handle JazzCash redirect
+      // Step 2: Handle JazzCash redirect — clear cart AFTER payment, not before
       if (paymentMethod === 'jazzcash' && extraData.mobileNumber) {
         const jcRes = await initiateJazzCash({
           orderId: order._id,
@@ -61,6 +60,9 @@ export default function CheckoutPage() {
         }).unwrap()
 
         const { params, postURL } = jcRes.data
+
+        // Clear cart just before leaving the page
+        clearAllCart()
 
         // Create a hidden form and submit to JazzCash
         const form = document.createElement('form')
@@ -78,7 +80,8 @@ export default function CheckoutPage() {
         return
       }
 
-      // Step 3: For COD and other methods go to success page
+      // Step 3: For COD and other methods — clear cart then go to success page
+      clearAllCart()
       navigate('/order-success', { state: { order } })
     } catch (err) {
       console.error('Place order error:', err)
