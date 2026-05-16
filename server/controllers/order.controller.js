@@ -70,7 +70,12 @@ exports.placeOrder = async (req, res, next) => {
       statusHistory: [{ status: initialStatus, message: initialMessage }],
     });
 
-    await orderConfirmationEmail(order, req.user.email);
+    // Send confirmation email — wrapped so email failure never kills the order
+    try {
+      await orderConfirmationEmail(order, req.user.email);
+    } catch (emailErr) {
+      console.error('Order confirmation email failed:', emailErr.message);
+    }
 
     res.status(201).json({ success: true, data: order, message: 'Order placed successfully' });
   } catch (error) {

@@ -35,11 +35,18 @@ export default function CheckoutPage() {
     setIsPlacing(true)
     try {
       // Step 1: Place the order
+      const validItems = items.filter((i) => i.product?._id)
+      if (!validItems.length) {
+        toast.error('Your cart appears empty. Please add items and try again.')
+        setIsPlacing(false)
+        return
+      }
+
       const res = await placeOrder({
         shippingAddress: address,
         paymentMethod,
         couponCode: coupon?.code,
-        items: items.map((i) => ({ productId: i.product._id, qty: i.qty, variant: i.variant })),
+        items: validItems.map((i) => ({ productId: i.product._id, qty: i.qty, variant: i.variant })),
       }).unwrap()
 
       const order = res.data
@@ -74,7 +81,8 @@ export default function CheckoutPage() {
       // Step 3: For COD and other methods go to success page
       navigate('/order-success', { state: { order } })
     } catch (err) {
-      toast.error(err?.data?.message || 'Failed to place order')
+      console.error('Place order error:', err)
+      toast.error(err?.data?.message || err?.error || 'Failed to place order. Please try again.')
     } finally {
       setIsPlacing(false)
     }

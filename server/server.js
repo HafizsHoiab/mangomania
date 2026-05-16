@@ -23,7 +23,7 @@ const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:3000'],
+  origin: (origin, callback) => callback(null, true), // Allow all origins (Vercel proxy + local dev)
   credentials: true,
 }));
 app.use(morgan('dev'));
