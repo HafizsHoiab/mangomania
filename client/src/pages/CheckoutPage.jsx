@@ -18,6 +18,8 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState(null)
   const [paymentMethod, setPaymentMethod] = useState('cod')
   const [isPlacing, setIsPlacing] = useState(false)
+  const [isGift, setIsGift] = useState(false)
+  const [giftDetails, setGiftDetails] = useState({ recipientName: '', recipientPhone: '', message: '' })
   const { items, clearAllCart } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
@@ -61,6 +63,14 @@ export default function CheckoutPage() {
         orderPayload.guestName = address.guestName
         orderPayload.guestPhone = address.guestPhone
         orderPayload.guestEmail = address.guestEmail
+      }
+
+      // Gift order info
+      if (isGift && paymentMethod !== 'cod') {
+        orderPayload.isGift = true
+        orderPayload.giftRecipientName = giftDetails.recipientName
+        orderPayload.giftRecipientPhone = giftDetails.recipientPhone
+        orderPayload.giftMessage = giftDetails.message
       }
 
       const res = await placeOrder(orderPayload).unwrap()
@@ -153,7 +163,58 @@ export default function CheckoutPage() {
           {step === 2 && (
             <div className="card">
               <h2 className="font-display text-xl font-bold text-dark mb-6">Payment Method</h2>
-              <PaymentOptions selected={paymentMethod} onSelect={setPaymentMethod} />
+              <PaymentOptions selected={paymentMethod} onSelect={(m) => { setPaymentMethod(m); if (m === 'cod') setIsGift(false) }} />
+
+              {/* Gift Order Toggle — only for advance payment */}
+              {paymentMethod !== 'cod' && (
+                <div className="mt-6 border-2 border-dashed border-amber-200 rounded-2xl p-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isGift}
+                      onChange={(e) => setIsGift(e.target.checked)}
+                      className="w-5 h-5 accent-mango"
+                    />
+                    <div>
+                      <p className="font-semibold text-dark">🎁 This is a Gift Order</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Send to someone special — they won't know the price</p>
+                    </div>
+                  </label>
+
+                  {isGift && (
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-dark mb-1">Recipient Name <span className="text-red-500">*</span></label>
+                        <input
+                          value={giftDetails.recipientName}
+                          onChange={(e) => setGiftDetails(g => ({ ...g, recipientName: e.target.value }))}
+                          placeholder="e.g. Ahmed Ali"
+                          className="input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-dark mb-1">Recipient Phone <span className="text-red-500">*</span></label>
+                        <input
+                          value={giftDetails.recipientPhone}
+                          onChange={(e) => setGiftDetails(g => ({ ...g, recipientPhone: e.target.value }))}
+                          placeholder="e.g. 03001234567"
+                          className="input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-dark mb-1">Gift Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                        <textarea
+                          value={giftDetails.message}
+                          onChange={(e) => setGiftDetails(g => ({ ...g, message: e.target.value }))}
+                          placeholder="e.g. Eid Mubarak! Enjoy the best mangoes from Multan 🥭"
+                          className="input resize-none"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {paymentMethod === 'jazzcash' && (
                 <JazzCashForm onSubmit={(data) => handlePlaceOrder({ mobileNumber: data.mobileNumber })} isLoading={isPlacing} />

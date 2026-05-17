@@ -191,12 +191,27 @@ export default function AdminOrders() {
                   {viewOrder.isPreOrder && (
                     <span className="badge bg-amber-100 text-amber-700">🕐 Pre-Order</span>
                   )}
+                  {viewOrder.isGift && (
+                    <span className="badge bg-pink-100 text-pink-700">🎁 Gift Order</span>
+                  )}
                   {viewOrder.rider?.name && (
                     <span className="badge bg-orange-100 text-orange-700">
                       🛵 Rider: {viewOrder.rider.name} ({viewOrder.rider.phone})
                     </span>
                   )}
                 </div>
+
+                {/* Gift details */}
+                {viewOrder.isGift && (
+                  <div className="bg-pink-50 border border-pink-200 rounded-xl p-3">
+                    <p className="text-xs text-pink-500 font-semibold mb-2">🎁 Gift Order Details</p>
+                    <p className="text-sm text-dark font-medium">{viewOrder.giftRecipientName}</p>
+                    <p className="text-sm text-gray-600">{viewOrder.giftRecipientPhone}</p>
+                    {viewOrder.giftMessage && (
+                      <p className="text-sm text-gray-500 italic mt-1">"{viewOrder.giftMessage}"</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Order items */}
                 <div>

@@ -5,7 +5,7 @@ const { orderConfirmationEmail, orderStatusEmail } = require('../utils/sendEmail
 
 exports.placeOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, paymentMethod, couponCode, items: clientItems, guestName, guestPhone, guestEmail } = req.body;
+    const { shippingAddress, paymentMethod, couponCode, items: clientItems, guestName, guestPhone, guestEmail, isGift, giftRecipientName, giftRecipientPhone, giftMessage } = req.body;
 
     // Must be logged in OR provide guest info
     if (!req.user && (!guestName || !guestPhone || !guestEmail)) {
@@ -74,6 +74,10 @@ exports.placeOrder = async (req, res, next) => {
       coupon: couponDoc?._id,
       couponCode: couponDoc?.code,
       isPreOrder: hasPreOrder,
+      isGift: !!isGift,
+      giftRecipientName: isGift ? giftRecipientName : undefined,
+      giftRecipientPhone: isGift ? giftRecipientPhone : undefined,
+      giftMessage: isGift ? giftMessage : undefined,
       orderStatus: initialStatus,
       statusHistory: [{ status: initialStatus, message: initialMessage }],
     });
