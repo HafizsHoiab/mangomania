@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { formatPrice } from '../../utils/formatPrice.js'
 import { calcDelivery, FREE_DELIVERY_THRESHOLD } from '../../utils/helpers.js'
 import CouponInput from './CouponInput.jsx'
@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 export default function OrderSummary({ items, showCheckout = true }) {
   const [coupon, setCoupon] = useState({ code: '', discount: 0 })
+  const navigate = useNavigate()
   const subtotal = items.reduce((acc, i) => acc + i.price * i.qty, 0)
   const delivery = calcDelivery(subtotal)
   const total = subtotal - coupon.discount + delivery
@@ -44,10 +45,21 @@ export default function OrderSummary({ items, showCheckout = true }) {
         <CouponInput subtotal={subtotal} onApply={setCoupon} />
       </div>
       {showCheckout && (
-        <Link to="/checkout" state={{ coupon, total, subtotal, delivery }}
-          className="btn-primary w-full text-center block text-sm">
-          Proceed to Checkout →
-        </Link>
+        <div className="flex flex-col gap-3">
+          <Link
+            to="/checkout"
+            state={{ coupon, total, subtotal, delivery }}
+            className="btn-primary w-full text-center block text-sm"
+          >
+            🛒 Checkout for Yourself
+          </Link>
+          <button
+            onClick={() => navigate('/checkout', { state: { coupon, total, subtotal, delivery, isGift: true } })}
+            className="w-full py-3 px-4 rounded-xl border-2 border-pink-300 bg-pink-50 text-pink-700 font-semibold text-sm hover:bg-pink-100 transition"
+          >
+            🎁 Gift to Your Loved Ones
+          </button>
+        </div>
       )}
     </div>
   )

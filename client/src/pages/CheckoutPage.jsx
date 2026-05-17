@@ -16,14 +16,14 @@ import { toast } from '../hooks/useToast.js'
 export default function CheckoutPage() {
   const [step, setStep] = useState(1)
   const [address, setAddress] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [paymentMethod, setPaymentMethod] = useState(isGiftFromCart ? 'jazzcash' : 'cod')
   const [isPlacing, setIsPlacing] = useState(false)
-  const [isGift, setIsGift] = useState(false)
+  const [isGift, setIsGift] = useState(!!isGiftFromCart)
   const [giftDetails, setGiftDetails] = useState({ recipientName: '', recipientPhone: '', message: '' })
   const { items, clearAllCart } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
-  const { coupon } = location.state || {}
+  const { coupon, isGift: isGiftFromCart } = location.state || {}
   const user = useSelector((s) => s.auth.user)
   const isGuest = !user
   const [placeOrder] = usePlaceOrderMutation()
@@ -146,6 +146,16 @@ export default function CheckoutPage() {
         </div>
       )}
 
+      {isGift && (
+        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6 flex gap-3 items-start">
+          <span className="text-xl">🎁</span>
+          <div>
+            <p className="font-semibold text-pink-800">You're sending a Gift!</p>
+            <p className="text-pink-700 text-sm mt-0.5">Fill in the recipient details in the payment step. COD is not available for gift orders.</p>
+          </div>
+        </div>
+      )}
+
       {isGuest && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex gap-3 items-start">
           <span className="text-xl">ℹ️</span>
@@ -179,54 +189,38 @@ export default function CheckoutPage() {
               <h2 className="font-display text-xl font-bold text-dark mb-6">Payment Method</h2>
               <PaymentOptions selected={paymentMethod} onSelect={(m) => { setPaymentMethod(m); if (m === 'cod') setIsGift(false) }} />
 
-              {/* Gift Order Toggle — only for advance payment */}
-              {paymentMethod !== 'cod' && (
-                <div className="mt-6 border-2 border-dashed border-amber-200 rounded-2xl p-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
+              {/* Gift recipient details */}
+              {isGift && (
+                <div className="mt-6 border-2 border-pink-200 bg-pink-50 rounded-2xl p-4 space-y-3">
+                  <p className="font-semibold text-pink-700">🎁 Gift Recipient Details</p>
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-1">Recipient Name <span className="text-red-500">*</span></label>
                     <input
-                      type="checkbox"
-                      checked={isGift}
-                      onChange={(e) => setIsGift(e.target.checked)}
-                      className="w-5 h-5 accent-mango"
+                      value={giftDetails.recipientName}
+                      onChange={(e) => setGiftDetails(g => ({ ...g, recipientName: e.target.value }))}
+                      placeholder="e.g. Ahmed Ali"
+                      className="input"
                     />
-                    <div>
-                      <p className="font-semibold text-dark">🎁 This is a Gift Order</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Send to someone special — they won't know the price</p>
-                    </div>
-                  </label>
-
-                  {isGift && (
-                    <div className="mt-4 space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-dark mb-1">Recipient Name <span className="text-red-500">*</span></label>
-                        <input
-                          value={giftDetails.recipientName}
-                          onChange={(e) => setGiftDetails(g => ({ ...g, recipientName: e.target.value }))}
-                          placeholder="e.g. Ahmed Ali"
-                          className="input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-dark mb-1">Recipient Phone <span className="text-red-500">*</span></label>
-                        <input
-                          value={giftDetails.recipientPhone}
-                          onChange={(e) => setGiftDetails(g => ({ ...g, recipientPhone: e.target.value }))}
-                          placeholder="e.g. 03001234567"
-                          className="input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-dark mb-1">Gift Message <span className="text-gray-400 font-normal">(optional)</span></label>
-                        <textarea
-                          value={giftDetails.message}
-                          onChange={(e) => setGiftDetails(g => ({ ...g, message: e.target.value }))}
-                          placeholder="e.g. Eid Mubarak! Enjoy the best mangoes from Multan 🥭"
-                          className="input resize-none"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-1">Recipient Phone <span className="text-red-500">*</span></label>
+                    <input
+                      value={giftDetails.recipientPhone}
+                      onChange={(e) => setGiftDetails(g => ({ ...g, recipientPhone: e.target.value }))}
+                      placeholder="e.g. 03001234567"
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark mb-1">Gift Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <textarea
+                      value={giftDetails.message}
+                      onChange={(e) => setGiftDetails(g => ({ ...g, message: e.target.value }))}
+                      placeholder="e.g. Eid Mubarak! Enjoy the best mangoes from Multan 🥭"
+                      className="input resize-none"
+                      rows={3}
+                    />
+                  </div>
                 </div>
               )}
 
