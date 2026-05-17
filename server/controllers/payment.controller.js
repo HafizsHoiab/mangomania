@@ -45,6 +45,9 @@ exports.initiateJazzCash = async (req, res, next) => {
 
     const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
 
+    const serverURL = process.env.SERVER_URL || 'https://mangomania-production.up.railway.app';
+
+    // MWALLET params — do NOT include pp_BankID or pp_ProductID (those are for bank txns only)
     const params = {
       pp_Version: '1.1',
       pp_TxnType: 'MWALLET',
@@ -52,8 +55,6 @@ exports.initiateJazzCash = async (req, res, next) => {
       pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID,
       pp_SubMerchantID: '',
       pp_Password: process.env.JAZZCASH_PASSWORD,
-      pp_BankID: 'TBANK',
-      pp_ProductID: 'RETL',
       pp_TxnRefNo: txnRefNo,
       pp_Amount: amountInPaisa,
       pp_TxnCurrency: 'PKR',
@@ -61,7 +62,7 @@ exports.initiateJazzCash = async (req, res, next) => {
       pp_BillReference: `ORD-${orderId.toString().slice(-8)}`,
       pp_Description: 'Mango Mania Order',
       pp_TxnExpiryDateTime: expiryDate,
-      pp_ReturnURL: `${process.env.SERVER_URL || 'https://mangomania-production.up.railway.app'}/api/payments/jazzcash/return`,
+      pp_ReturnURL: `${serverURL}/api/payments/jazzcash/return`,
       pp_MobileNumber: mobileNumber,
     };
 
