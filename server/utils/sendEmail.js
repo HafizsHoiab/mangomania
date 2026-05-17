@@ -1,30 +1,26 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const getTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user, pass },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 10000,
-  });
+const getResend = () => {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
 };
 
 const sendEmail = async ({ to, subject, html }) => {
-  const transporter = getTransporter();
-  if (!transporter) {
-    console.log('Email skipped — EMAIL_USER / EMAIL_PASS not configured');
+  const resend = getResend();
+  if (!resend) {
+    console.log('Email skipped — RESEND_API_KEY not configured');
     return;
   }
   try {
-    const from = `Mango Mania <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`;
-    await transporter.sendMail({ from, to, subject, html });
-    console.log('Email sent to', to);
+    const fromEmail = process.env.EMAIL_FROM || 'orders@mangomania.co';
+    const { error } = await resend.emails.send({
+      from: `Mango Mania <${fromEmail}>`,
+      to,
+      subject,
+      html,
+    });
+    if (error) console.error('Resend error:', error);
+    else console.log('Email sent to', to);
   } catch (err) {
     console.error('Email send error:', err.message);
   }
