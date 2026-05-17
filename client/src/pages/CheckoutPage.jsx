@@ -14,20 +14,20 @@ import { formatPrice } from '../utils/formatPrice.js'
 import { toast } from '../hooks/useToast.js'
 
 export default function CheckoutPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { coupon, isGift: isGiftFromCart } = location.state || {}
+  const user = useSelector((s) => s.auth.user)
+  const isGuest = !user
+  const { items, clearAllCart } = useCart()
+  const [placeOrder] = usePlaceOrderMutation()
+  const [initiateJazzCash] = useInitiateJazzCashMutation()
   const [step, setStep] = useState(1)
   const [address, setAddress] = useState(null)
   const [paymentMethod, setPaymentMethod] = useState(isGiftFromCart ? 'jazzcash' : 'cod')
   const [isPlacing, setIsPlacing] = useState(false)
   const [isGift, setIsGift] = useState(!!isGiftFromCart)
   const [giftDetails, setGiftDetails] = useState({ recipientName: '', recipientPhone: '', message: '' })
-  const { items, clearAllCart } = useCart()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { coupon, isGift: isGiftFromCart } = location.state || {}
-  const user = useSelector((s) => s.auth.user)
-  const isGuest = !user
-  const [placeOrder] = usePlaceOrderMutation()
-  const [initiateJazzCash] = useInitiateJazzCashMutation()
 
   const handleAddressSubmit = (data) => {
     setAddress(data)
