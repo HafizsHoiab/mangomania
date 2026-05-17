@@ -39,6 +39,14 @@ const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') 
     </tr>`
   ).join('');
 
+  const giftHtml = order.isGift ? `
+    <div style="background:#fdf2f8;border:1px solid #f9a8d4;border-radius:8px;padding:16px;margin-bottom:20px;">
+      <p style="color:#be185d;font-weight:bold;margin:0 0 8px 0;">🎁 Gift Order</p>
+      <p style="color:#374151;margin:0;">For: <strong>${order.giftRecipientName}</strong></p>
+      <p style="color:#374151;margin:4px 0 0 0;">Phone: ${order.giftRecipientPhone}</p>
+      ${order.giftMessage ? `<p style="color:#6B7280;font-style:italic;margin:8px 0 0 0;">"${order.giftMessage}"</p>` : ''}
+    </div>` : '';
+
   return sendEmail({
     to: userEmail,
     subject: `Order Confirmed #${orderId} — Mango Mania 🥭`,
@@ -52,6 +60,7 @@ const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') 
           <h2 style="color:#92400E;margin:0 0 4px 0;">Order Confirmed! ✅</h2>
           <p style="color:#78350F;margin:0;">Jazakallah, ${userName}! Your order has been received.</p>
         </div>
+        ${giftHtml}
         <p style="color:#374151;"><strong>Order ID:</strong> #${orderId}</p>
         <p style="color:#374151;"><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.toUpperCase()}</p>
         <p style="color:#374151;"><strong>Delivery to:</strong> ${order.shippingAddress?.city}, ${order.shippingAddress?.province}</p>

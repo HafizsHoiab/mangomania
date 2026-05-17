@@ -44,6 +44,20 @@ export default function CheckoutPage() {
         return
       }
 
+      // Gift validation
+      if (isGift && paymentMethod !== 'cod') {
+        if (!giftDetails.recipientName.trim()) {
+          toast.error('Please enter the recipient name for gift order.')
+          setIsPlacing(false)
+          return
+        }
+        if (!giftDetails.recipientPhone.trim()) {
+          toast.error('Please enter the recipient phone for gift order.')
+          setIsPlacing(false)
+          return
+        }
+      }
+
       const orderPayload = {
         shippingAddress: {
           name: isGuest ? address.guestName : address.name,

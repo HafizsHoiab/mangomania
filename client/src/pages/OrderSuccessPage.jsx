@@ -100,6 +100,18 @@ export default function OrderSuccessPage() {
               </p>
             </div>
           </div>
+
+          {/* Gift details */}
+          {order.isGift && (
+            <div className="mt-4 pt-4 border-t border-amber-200 bg-pink-50 rounded-xl p-4">
+              <p className="text-sm font-bold text-pink-700 mb-2">🎁 Gift Order</p>
+              <p className="text-sm text-gray-700"><span className="text-gray-500">For:</span> {order.giftRecipientName}</p>
+              <p className="text-sm text-gray-700"><span className="text-gray-500">Phone:</span> {order.giftRecipientPhone}</p>
+              {order.giftMessage && (
+                <p className="text-sm text-gray-500 italic mt-1">"{order.giftMessage}"</p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
