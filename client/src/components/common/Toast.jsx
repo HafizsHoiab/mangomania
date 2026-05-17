@@ -1,26 +1,29 @@
 import { useToast } from '../../hooks/useToast.js'
 
 const styles = {
-  success: { icon: '✅', bg: 'bg-green-600', text: 'text-white' },
-  error:   { icon: '❌', bg: 'bg-red-600',   text: 'text-white' },
-  info:    { icon: 'ℹ️', bg: 'bg-blue-600',  text: 'text-white' },
-  warning: { icon: '⚠️', bg: 'bg-amber-500', text: 'text-white' },
+  success: { icon: '✅', bg: '#16a34a' },
+  error:   { icon: '❌', bg: '#dc2626' },
+  info:    { icon: 'ℹ️', bg: '#2563eb' },
+  warning: { icon: '⚠️', bg: '#d97706' },
 }
 
 export default function Toast() {
   const { toasts, removeToast } = useToast()
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 max-w-xs w-full">
+    <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '320px', width: '100%' }}>
       {toasts.map((t) => {
         const s = styles[t.type] || styles.info
         return (
           <div
             key={t.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${s.bg} ${s.text}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', backgroundColor: s.bg, color: '#ffffff', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}
           >
-            <span className="text-base shrink-0">{s.icon}</span>
-            <p className="flex-1 text-sm font-semibold leading-snug">{t.message}</p>
-            <button onClick={() => removeToast(t.id)} className="opacity-70 hover:opacity-100 ml-1 text-white shrink-0">✕</button>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>{s.icon}</span>
+            <p style={{ flex: 1, fontSize: '14px', fontWeight: 600, margin: 0, color: '#ffffff' }}>{t.message}</p>
+            <button
+              onClick={() => removeToast(t.id)}
+              style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', fontSize: '16px', opacity: 0.8, flexShrink: 0 }}
+            >✕</button>
           </div>
         )
       })}
