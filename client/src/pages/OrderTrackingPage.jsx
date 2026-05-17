@@ -67,7 +67,11 @@ export default function OrderTrackingPage() {
               <span className="text-2xl">🕐</span>
               <div>
                 <p className="font-semibold text-amber-800">This is a Pre-Order</p>
-                <p className="text-amber-700 text-sm mt-0.5">Your payment is confirmed. We will start processing your order as soon as stock becomes available and notify you via email.</p>
+                <p className="text-amber-700 text-sm mt-0.5">
+                  {order.paymentMethod === 'cod'
+                    ? 'Your order is confirmed. Payment will be collected on delivery once stock is available and dispatched.'
+                    : 'Your payment is confirmed. We will start processing your order as soon as stock becomes available and notify you via email.'}
+                </p>
               </div>
             </div>
           )}
