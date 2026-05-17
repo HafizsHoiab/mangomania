@@ -5,10 +5,27 @@ const slugify = require('slugify');
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const query = Product.find({ isActive: true }).populate('category', 'name slug');
-    const features = new ApiFeatures(query, req.query).search().filter().sort().paginate();
+    const queryParams = { ...req.query };
+
+    // Resolve category slug → ObjectId so filter works correctly
+    if (queryParams.category) {
+      const cat = await Category.findOne({ slug: queryParams.category });
+      if (cat) queryParams.category = cat._id;
+      else queryParams.category = null; // no match → return empty
+    }
+
+    const baseFilter = { isActive: true };
+    if (queryParams.category === null) {
+      return res.json({ success: true, data: [], pagination: { page: 1, limit: 12, total: 0, pages: 0 } });
+    }
+
+    const query = Product.find(baseFilter).populate('category', 'name slug');
+    const features = new ApiFeatures(query, queryParams).search().filter().sort().paginate();
     const products = await features.query;
-    const total = await Product.countDocuments({ isActive: true });
+
+    const countFilter = { isActive: true };
+    if (queryParams.category) countFilter.category = queryParams.category;
+    const total = await Product.countDocuments(countFilter);
 
     res.json({
       success: true,

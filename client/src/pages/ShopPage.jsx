@@ -71,7 +71,7 @@ export default function ShopPage() {
           <Pagination
             page={pagination.page || 1}
             pages={pagination.pages || 1}
-            onPageChange={(p) => setFilters(f => ({ ...f, page: p }))}
+            onPageChange={(p) => { setFilters(f => ({ ...f, page: p })); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
           />
         </div>
       </div>

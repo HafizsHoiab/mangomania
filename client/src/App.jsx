@@ -4,6 +4,7 @@ import Navbar from './components/common/Navbar.jsx'
 import Footer from './components/common/Footer.jsx'
 import Loader from './components/common/Loader.jsx'
 import Toast from './components/common/Toast.jsx'
+import ScrollToTop from './components/common/ScrollToTop.jsx'
 import ProtectedRoute from './components/common/ProtectedRoute.jsx'
 import AdminRoute from './components/common/AdminRoute.jsx'
 
@@ -77,6 +78,7 @@ function PublicLayout() {
 export default function App() {
   return (
     <>
+      <ScrollToTop />
       <Toast />
       <Routes>
         <Route path="/admin/*" element={<AdminRoute><AdminLayout /></AdminRoute>} />

@@ -16,7 +16,7 @@ export default function Toast() {
         return (
           <div
             key={t.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl animate-fade-in ${s.bg} ${s.text}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${s.bg} ${s.text}`}
           >
             <span className="text-base shrink-0">{s.icon}</span>
             <p className="flex-1 text-sm font-semibold leading-snug">{t.message}</p>
