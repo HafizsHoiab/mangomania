@@ -1,62 +1,28 @@
-const https = require('https');
+const nodemailer = require('nodemailer');
+
+const getTransporter = () => {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
+};
 
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.BREVO_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || 'shoai.ishaq2633@gmail.com';
-  const fromName = 'Mango Mania';
-
-  if (!apiKey) {
-    console.log('Email skipped — BREVO_API_KEY not configured');
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log('Email skipped — EMAIL_USER / EMAIL_PASS not configured');
     return;
   }
-
-  const payload = JSON.stringify({
-    sender: { name: fromName, email: fromEmail },
-    to: [{ email: to }],
-    subject,
-    htmlContent: html,
-  });
-
-  return new Promise((resolve) => {
-    const options = {
-      hostname: 'api.brevo.com',
-      path: '/v3/smtp/email',
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': apiKey,
-        'content-type': 'application/json',
-        'content-length': Buffer.byteLength(payload),
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log('Email sent to', to);
-        } else {
-          console.error('Brevo error:', res.statusCode, data);
-        }
-        resolve();
-      });
-    });
-
-    req.on('error', (err) => {
-      console.error('Email send error:', err.message);
-      resolve();
-    });
-
-    req.setTimeout(10000, () => {
-      console.error('Email timeout');
-      req.destroy();
-      resolve();
-    });
-
-    req.write(payload);
-    req.end();
-  });
+  try {
+    const from = `Mango Mania <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`;
+    await transporter.sendMail({ from, to, subject, html });
+    console.log('Email sent to', to);
+  } catch (err) {
+    console.error('Email send error:', err.message);
+  }
 };
 
 const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') => {
