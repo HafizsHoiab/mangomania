@@ -78,14 +78,11 @@ exports.placeOrder = async (req, res, next) => {
       statusHistory: [{ status: initialStatus, message: initialMessage }],
     });
 
-    // Send confirmation email to guest email or registered user email
+    // Send confirmation email — fire and forget (don't block order response)
     const confirmationEmail = req.user ? req.user.email : guestEmail;
     const confirmationName = req.user ? req.user.name : guestName;
-    try {
-      await orderConfirmationEmail(order, confirmationEmail, confirmationName);
-    } catch (emailErr) {
-      console.error('Order confirmation email failed:', emailErr.message);
-    }
+    orderConfirmationEmail(order, confirmationEmail, confirmationName)
+      .catch(emailErr => console.error('Order confirmation email failed:', emailErr.message));
 
     res.status(201).json({ success: true, data: order, message: 'Order placed successfully' });
   } catch (error) {
