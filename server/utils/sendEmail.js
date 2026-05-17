@@ -1,20 +1,28 @@
-const transporter = require('../config/nodemailer');
+const { Resend } = require('resend');
+
+const getResend = () => {
+  if (!process.env.RESEND_API_KEY) return null;
+  return new Resend(process.env.RESEND_API_KEY);
+};
 
 const sendEmail = async ({ to, subject, html }) => {
-  // Skip silently if email credentials are not configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('Email skipped — EMAIL_USER/EMAIL_PASS not configured');
+  const resend = getResend();
+  if (!resend) {
+    console.log('Email skipped — RESEND_API_KEY not configured');
     return;
   }
   try {
-    await transporter.sendMail({
-      from: `"Mango Mania 🥭" <${process.env.EMAIL_USER}>`,
+    const fromName = 'Mango Mania';
+    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+    const { error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
       to,
       subject,
       html,
     });
-  } catch (error) {
-    console.error('Email send error:', error.message);
+    if (error) console.error('Resend error:', error);
+  } catch (err) {
+    console.error('Email send error:', err.message);
   }
 };
 
@@ -40,16 +48,13 @@ const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') 
           <h1 style="color:#D97706;margin:0;">🥭 Mango Mania</h1>
           <p style="color:#6B7280;margin:4px 0;">Fresh from Multan</p>
         </div>
-
         <div style="background:#FEF3C7;border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
           <h2 style="color:#92400E;margin:0 0 4px 0;">Order Confirmed! ✅</h2>
           <p style="color:#78350F;margin:0;">Jazakallah, ${userName}! Your order has been received.</p>
         </div>
-
         <p style="color:#374151;"><strong>Order ID:</strong> #${orderId}</p>
         <p style="color:#374151;"><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.toUpperCase()}</p>
         <p style="color:#374151;"><strong>Delivery to:</strong> ${order.shippingAddress?.city}, ${order.shippingAddress?.province}</p>
-
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
           <thead>
             <tr style="background:#F59E0B;">
@@ -70,16 +75,14 @@ const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') 
             </tr>
           </tfoot>
         </table>
-
         <div style="text-align:center;margin:24px 0;">
           <a href="${trackingURL}" style="background:#F59E0B;color:white;padding:12px 28px;text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px;">
             📦 Track Your Order
           </a>
         </div>
-
         <p style="color:#6B7280;font-size:12px;text-align:center;margin-top:24px;">
           Mango Mania — Multan, Pakistan<br/>
-          Questions? Contact us at mangomania.co
+          Questions? Visit mangomania.co
         </p>
       </div>
     `,
@@ -87,6 +90,7 @@ const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') 
 };
 
 const orderStatusEmail = (order, userEmail, newStatus) => {
+  if (!userEmail) return Promise.resolve();
   const statusMessages = {
     confirmed: 'Your order has been confirmed and is being prepared.',
     packed: 'Your order has been packed and is ready for dispatch.',
@@ -94,17 +98,19 @@ const orderStatusEmail = (order, userEmail, newStatus) => {
     delivered: 'Your order has been delivered. Enjoy! 🥭',
     cancelled: 'Your order has been cancelled.',
   };
-
+  const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
   return sendEmail({
     to: userEmail,
     subject: `Order ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} — Mango Mania`,
     html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;background:#FDF8F0;">
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;background:#FDF8F0;border-radius:12px;">
         <h1 style="color:#D97706;text-align:center;">🥭 Mango Mania</h1>
         <h2>Order Update</h2>
         <p><strong>Order #${order._id.toString().slice(-8).toUpperCase()}</strong></p>
         <p>${statusMessages[newStatus] || `Status updated to: ${newStatus}`}</p>
-        <a href="${process.env.CLIENT_URL}/track-order" style="background:#F59E0B;color:white;padding:10px 20px;text-decoration:none;border-radius:8px;">Track Order</a>
+        <div style="text-align:center;margin:20px 0;">
+          <a href="${clientURL}/track-order?orderId=${order._id}" style="background:#F59E0B;color:white;padding:10px 20px;text-decoration:none;border-radius:8px;">Track Order</a>
+        </div>
       </div>
     `,
   });
@@ -115,7 +121,7 @@ const passwordResetEmail = (email, otp) => {
     to: email,
     subject: 'Password Reset OTP — Mango Mania',
     html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;background:#FDF8F0;">
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;background:#FDF8F0;border-radius:12px;">
         <h1 style="color:#D97706;text-align:center;">🥭 Mango Mania</h1>
         <h2>Password Reset</h2>
         <p>Your OTP for password reset is:</p>
