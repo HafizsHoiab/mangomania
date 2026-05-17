@@ -5,10 +5,12 @@ const getTransporter = () => {
   const pass = process.env.EMAIL_PASS;
   if (!user || !pass) return null;
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: { user, pass },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
     socketTimeout: 10000,
   });
 };
