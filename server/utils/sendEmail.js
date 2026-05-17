@@ -1,29 +1,62 @@
-const { Resend } = require('resend');
-
-const getResend = () => {
-  if (!process.env.RESEND_API_KEY) return null;
-  return new Resend(process.env.RESEND_API_KEY);
-};
+const https = require('https');
 
 const sendEmail = async ({ to, subject, html }) => {
-  const resend = getResend();
-  if (!resend) {
-    console.log('Email skipped — RESEND_API_KEY not configured');
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.EMAIL_FROM || 'shoai.ishaq2633@gmail.com';
+  const fromName = 'Mango Mania';
+
+  if (!apiKey) {
+    console.log('Email skipped — BREVO_API_KEY not configured');
     return;
   }
-  try {
-    const fromName = 'Mango Mania';
-    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-    const { error } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to,
-      subject,
-      html,
+
+  const payload = JSON.stringify({
+    sender: { name: fromName, email: fromEmail },
+    to: [{ email: to }],
+    subject,
+    htmlContent: html,
+  });
+
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(payload),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log('Email sent to', to);
+        } else {
+          console.error('Brevo error:', res.statusCode, data);
+        }
+        resolve();
+      });
     });
-    if (error) console.error('Resend error:', error);
-  } catch (err) {
-    console.error('Email send error:', err.message);
-  }
+
+    req.on('error', (err) => {
+      console.error('Email send error:', err.message);
+      resolve();
+    });
+
+    req.setTimeout(10000, () => {
+      console.error('Email timeout');
+      req.destroy();
+      resolve();
+    });
+
+    req.write(payload);
+    req.end();
+  });
 };
 
 const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') => {
