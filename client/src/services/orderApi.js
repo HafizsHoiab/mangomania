@@ -9,6 +9,9 @@ export const orderApi = createApi({
     placeOrder: builder.mutation({ query: (data) => ({ url: '/', method: 'POST', body: data }), invalidatesTags: ['Order'] }),
     getMyOrders: builder.query({ query: (params = '') => `/my-orders?${params}`, providesTags: ['Order'] }),
     getOrderById: builder.query({ query: (id) => `/${id}`, providesTags: ['Order'] }),
+    // Public — no auth needed
+    getPublicOrder: builder.query({ query: (id) => `/track/${id}` }),
+    trackByPhone: builder.query({ query: (phone) => `/track/by-phone?phone=${phone}` }),
     cancelOrder: builder.mutation({ query: (id) => ({ url: `/${id}/cancel`, method: 'PUT' }), invalidatesTags: ['Order'] }),
     getAllOrders: builder.query({ query: (params = '') => `/?${params}`, providesTags: ['Order'] }),
     updateOrderStatus: builder.mutation({ query: ({ id, ...data }) => ({ url: `/${id}/status`, method: 'PUT', body: data }), invalidatesTags: ['Order'] }),
@@ -20,4 +23,5 @@ export const {
   usePlaceOrderMutation, useGetMyOrdersQuery, useGetOrderByIdQuery,
   useCancelOrderMutation, useGetAllOrdersQuery,
   useUpdateOrderStatusMutation, useAssignRiderMutation,
+  useGetPublicOrderQuery, useTrackByPhoneQuery,
 } = orderApi

@@ -5,7 +5,12 @@ const { orderConfirmationEmail, orderStatusEmail } = require('../utils/sendEmail
 
 exports.placeOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, paymentMethod, couponCode, items: clientItems } = req.body;
+    const { shippingAddress, paymentMethod, couponCode, items: clientItems, guestName, guestPhone, guestEmail } = req.body;
+
+    // Must be logged in OR provide guest info
+    if (!req.user && (!guestName || !guestPhone || !guestEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide your name, phone, and email to place an order.' });
+    }
 
     if (!clientItems || clientItems.length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
@@ -56,7 +61,10 @@ exports.placeOrder = async (req, res, next) => {
       : 'Order placed successfully';
 
     const order = await Order.create({
-      user: req.user._id,
+      user: req.user?._id || null,
+      guestName: req.user ? undefined : guestName,
+      guestPhone: req.user ? undefined : guestPhone,
+      guestEmail: req.user ? undefined : guestEmail,
       items,
       shippingAddress,
       paymentMethod,
@@ -70,14 +78,49 @@ exports.placeOrder = async (req, res, next) => {
       statusHistory: [{ status: initialStatus, message: initialMessage }],
     });
 
-    // Send confirmation email — wrapped so email failure never kills the order
+    // Send confirmation email to guest email or registered user email
+    const confirmationEmail = req.user ? req.user.email : guestEmail;
+    const confirmationName = req.user ? req.user.name : guestName;
     try {
-      await orderConfirmationEmail(order, req.user.email);
+      await orderConfirmationEmail(order, confirmationEmail, confirmationName);
     } catch (emailErr) {
       console.error('Order confirmation email failed:', emailErr.message);
     }
 
     res.status(201).json({ success: true, data: order, message: 'Order placed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Public tracking — by order ID (no auth needed)
+exports.trackOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('items.product', 'name images slug');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    res.json({ success: true, data: order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Public tracking — by phone number (no auth needed)
+exports.trackByPhone = async (req, res, next) => {
+  try {
+    const { phone } = req.query;
+    if (!phone) return res.status(400).json({ success: false, message: 'Phone number required' });
+
+    const orders = await Order.find({
+      $or: [
+        { 'shippingAddress.phone': phone },
+        { guestPhone: phone },
+      ]
+    })
+      .populate('items.product', 'name images')
+      .sort('-createdAt')
+      .limit(10);
+
+    res.json({ success: true, data: orders });
   } catch (error) {
     next(error);
   }

@@ -26,7 +26,11 @@ const statusHistorySchema = new mongoose.Schema({
 });
 
 const orderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+  // Guest order fields (used when user is not logged in)
+  guestName: String,
+  guestPhone: String,
+  guestEmail: String,
   items: [orderItemSchema],
   shippingAddress: shippingAddressSchema,
   paymentMethod: {

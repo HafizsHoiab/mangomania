@@ -21,8 +21,9 @@ export default function CheckoutPage() {
   const { items, clearAllCart } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
-  const { coupon, total } = location.state || {}
+  const { coupon } = location.state || {}
   const user = useSelector((s) => s.auth.user)
+  const isGuest = !user
   const [placeOrder] = usePlaceOrderMutation()
   const [initiateJazzCash] = useInitiateJazzCashMutation()
 
@@ -34,7 +35,6 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (extraData = {}) => {
     setIsPlacing(true)
     try {
-      // Step 1: Place the order
       const validItems = items.filter((i) => i.product?._id)
       if (!validItems.length) {
         toast.error('Your cart appears empty. Please add items and try again.')
@@ -42,16 +42,31 @@ export default function CheckoutPage() {
         return
       }
 
-      const res = await placeOrder({
-        shippingAddress: address,
+      const orderPayload = {
+        shippingAddress: {
+          name: isGuest ? address.guestName : address.name,
+          phone: address.phone,
+          street: address.street,
+          city: address.city,
+          province: address.province,
+          notes: address.notes,
+        },
         paymentMethod,
         couponCode: coupon?.code,
         items: validItems.map((i) => ({ productId: i.product._id, qty: i.qty, variant: i.variant })),
-      }).unwrap()
+      }
 
+      // Pass guest info if not logged in
+      if (isGuest) {
+        orderPayload.guestName = address.guestName
+        orderPayload.guestPhone = address.guestPhone
+        orderPayload.guestEmail = address.guestEmail
+      }
+
+      const res = await placeOrder(orderPayload).unwrap()
       const order = res.data
 
-      // Step 2: Handle JazzCash redirect — clear cart AFTER payment, not before
+      // JazzCash redirect
       if (paymentMethod === 'jazzcash' && extraData.mobileNumber) {
         const jcRes = await initiateJazzCash({
           orderId: order._id,
@@ -60,11 +75,8 @@ export default function CheckoutPage() {
         }).unwrap()
 
         const { params, postURL } = jcRes.data
-
-        // Clear cart just before leaving the page
         clearAllCart()
 
-        // Create a hidden form and submit to JazzCash
         const form = document.createElement('form')
         form.method = 'POST'
         form.action = postURL
@@ -80,7 +92,6 @@ export default function CheckoutPage() {
         return
       }
 
-      // Step 3: For COD and other methods — clear cart then go to success page
       clearAllCart()
       navigate('/order-success', { state: { order } })
     } catch (err) {
@@ -106,7 +117,20 @@ export default function CheckoutPage() {
           <span className="text-2xl">🕐</span>
           <div>
             <p className="font-semibold text-amber-800">Your cart contains a Pre-Order item</p>
-            <p className="text-amber-700 text-sm mt-0.5">Full payment is collected now. Pre-order items will be dispatched once stock is available. You'll receive an email update when ready.</p>
+            <p className="text-amber-700 text-sm mt-0.5">Pre-order items will be dispatched once stock is available. You'll receive an email update when ready.</p>
+          </div>
+        </div>
+      )}
+
+      {isGuest && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex gap-3 items-start">
+          <span className="text-xl">ℹ️</span>
+          <div>
+            <p className="font-semibold text-blue-800">Ordering as Guest</p>
+            <p className="text-blue-700 text-sm mt-0.5">
+              No account needed! Fill in your details below.{' '}
+              <a href="/login" className="underline font-medium">Login</a> if you have an account.
+            </p>
           </div>
         </div>
       )}
@@ -114,14 +138,14 @@ export default function CheckoutPage() {
       <CheckoutSteps current={step} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main area */}
         <div className="lg:col-span-2">
           {step === 1 && (
             <div className="card">
               <h2 className="font-display text-xl font-bold text-dark mb-6">Delivery Details</h2>
               <AddressForm
-                defaultValues={{ name: user?.name, phone: user?.phone }}
+                defaultValues={isGuest ? {} : { name: user?.name, phone: user?.phone }}
                 onSubmit={handleAddressSubmit}
+                isGuest={isGuest}
               />
             </div>
           )}

@@ -18,28 +18,69 @@ const sendEmail = async ({ to, subject, html }) => {
   }
 };
 
-const orderConfirmationEmail = (order, userEmail) => {
+const orderConfirmationEmail = (order, userEmail, userName = 'Valued Customer') => {
+  const clientURL = process.env.CLIENT_URL || 'https://mangomania.co';
+  const orderId = order._id.toString().slice(-8).toUpperCase();
+  const trackingURL = `${clientURL}/track-order?orderId=${order._id}`;
+
   const itemsHtml = order.items.map(item =>
-    `<tr><td>${item.name}</td><td>${item.qty}</td><td>Rs. ${item.price.toLocaleString()}</td></tr>`
+    `<tr>
+      <td style="padding:8px;border-bottom:1px solid #FEF3C7;">${item.name}</td>
+      <td style="padding:8px;border-bottom:1px solid #FEF3C7;text-align:center;">${item.qty}</td>
+      <td style="padding:8px;border-bottom:1px solid #FEF3C7;text-align:right;">Rs. ${(item.price * item.qty).toLocaleString()}</td>
+    </tr>`
   ).join('');
 
   return sendEmail({
     to: userEmail,
-    subject: `Order Confirmed — #${order._id.toString().slice(-8).toUpperCase()} | Mango Mania`,
+    subject: `Order Confirmed #${orderId} — Mango Mania 🥭`,
     html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;background:#FDF8F0;">
-        <h1 style="color:#D97706;text-align:center;">🥭 Mango Mania</h1>
-        <h2>Order Confirmed!</h2>
-        <p>Hi! Your order has been placed successfully.</p>
-        <p><strong>Order ID:</strong> #${order._id.toString().slice(-8).toUpperCase()}</p>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead><tr style="background:#F59E0B;color:white;"><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;background:#FDF8F0;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#D97706;margin:0;">🥭 Mango Mania</h1>
+          <p style="color:#6B7280;margin:4px 0;">Fresh from Multan</p>
+        </div>
+
+        <div style="background:#FEF3C7;border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
+          <h2 style="color:#92400E;margin:0 0 4px 0;">Order Confirmed! ✅</h2>
+          <p style="color:#78350F;margin:0;">Jazakallah, ${userName}! Your order has been received.</p>
+        </div>
+
+        <p style="color:#374151;"><strong>Order ID:</strong> #${orderId}</p>
+        <p style="color:#374151;"><strong>Payment:</strong> ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.toUpperCase()}</p>
+        <p style="color:#374151;"><strong>Delivery to:</strong> ${order.shippingAddress?.city}, ${order.shippingAddress?.province}</p>
+
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <thead>
+            <tr style="background:#F59E0B;">
+              <th style="padding:10px;color:white;text-align:left;">Item</th>
+              <th style="padding:10px;color:white;text-align:center;">Qty</th>
+              <th style="padding:10px;color:white;text-align:right;">Price</th>
+            </tr>
+          </thead>
           <tbody>${itemsHtml}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="padding:10px;text-align:right;font-weight:bold;">Delivery:</td>
+              <td style="padding:10px;text-align:right;">${order.deliveryCharge === 0 ? 'FREE' : `Rs. ${order.deliveryCharge}`}</td>
+            </tr>
+            <tr style="background:#FEF3C7;">
+              <td colspan="2" style="padding:10px;text-align:right;font-weight:bold;font-size:16px;">Total:</td>
+              <td style="padding:10px;text-align:right;font-weight:bold;font-size:16px;">Rs. ${order.totalAmount.toLocaleString()}</td>
+            </tr>
+          </tfoot>
         </table>
-        <p><strong>Total: Rs. ${order.totalAmount.toLocaleString()}</strong></p>
-        <p><strong>Payment:</strong> ${order.paymentMethod.toUpperCase()}</p>
-        <p>Track your order at: <a href="${process.env.CLIENT_URL}/track-order">Click here</a></p>
-        <p style="color:#6B7280;font-size:12px;">Multan, Pakistan | mangomania.pk</p>
+
+        <div style="text-align:center;margin:24px 0;">
+          <a href="${trackingURL}" style="background:#F59E0B;color:white;padding:12px 28px;text-decoration:none;border-radius:8px;font-weight:bold;font-size:15px;">
+            📦 Track Your Order
+          </a>
+        </div>
+
+        <p style="color:#6B7280;font-size:12px;text-align:center;margin-top:24px;">
+          Mango Mania — Multan, Pakistan<br/>
+          Questions? Contact us at mangomania.co
+        </p>
       </div>
     `,
   });

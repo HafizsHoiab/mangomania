@@ -27,4 +27,23 @@ const isAdmin = (req, res, next) => {
   return res.status(403).json({ success: false, message: 'Admin access required' });
 };
 
-module.exports = { verifyToken, isAdmin };
+// Like verifyToken but doesn't fail if no token — sets req.user = null for guests
+const optionalVerifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      req.user = null;
+      return next();
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password -refreshToken');
+    req.user = user || null;
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};
+
+module.exports = { verifyToken, isAdmin, optionalVerifyToken };

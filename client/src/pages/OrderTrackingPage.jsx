@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useGetOrderByIdQuery } from '../services/orderApi.js'
-import { useLocation } from 'react-router-dom'
+import { useGetPublicOrderQuery, useTrackByPhoneQuery } from '../services/orderApi.js'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { formatDate, formatDateTime } from '../utils/formatDate.js'
 import { formatPrice } from '../utils/formatPrice.js'
 import { generateOrderId } from '../utils/helpers.js'
@@ -20,44 +20,106 @@ const STATUS_ICONS = { pre_order: '🕐', pending: '📝', confirmed: '✅', pac
 
 export default function OrderTrackingPage() {
   const location = useLocation()
-  const [orderId, setOrderId] = useState('')
+  const [searchParams] = useSearchParams()
+  const [searchMode, setSearchMode] = useState('id') // 'id' or 'phone'
+  const [inputValue, setInputValue] = useState('')
   const [searchId, setSearchId] = useState('')
+  const [searchPhone, setSearchPhone] = useState('')
 
-  // Auto-fill if navigated from Profile page with orderId in state
+  // Auto-fill from URL params (JazzCash return or email link)
   useEffect(() => {
-    if (location.state?.orderId) {
+    const urlOrderId = searchParams.get('orderId')
+    if (urlOrderId) {
+      setSearchId(urlOrderId)
+      setInputValue(urlOrderId)
+      setSearchMode('id')
+    } else if (location.state?.orderId) {
       setSearchId(location.state.orderId)
-      setOrderId(location.state.orderId)
+      setInputValue(location.state.orderId)
+      setSearchMode('id')
     }
-  }, [location.state])
+  }, [location.state, searchParams])
 
-  const { data, isLoading, isError } = useGetOrderByIdQuery(searchId, { skip: !searchId })
-  const order = data?.data
+  const { data: orderData, isLoading: orderLoading, isError: orderError } = useGetPublicOrderQuery(searchId, { skip: !searchId })
+  const { data: phoneData, isLoading: phoneLoading, isError: phoneError } = useTrackByPhoneQuery(searchPhone, { skip: !searchPhone })
+
+  const order = orderData?.data
+  const phoneOrders = phoneData?.data || []
+  const isLoading = orderLoading || phoneLoading
+  const isError = (searchId && orderError) || (searchPhone && phoneError)
 
   const STATUS_STEPS = order?.isPreOrder ? PREORDER_STEPS : REGULAR_STEPS
   const currentStepIndex = order ? STATUS_STEPS.indexOf(order.orderStatus) : -1
+
+  const handleSearch = () => {
+    if (searchMode === 'id') {
+      setSearchPhone('')
+      setSearchId(inputValue.replace('#', '').trim())
+    } else {
+      setSearchId('')
+      setSearchPhone(inputValue.trim())
+    }
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="text-center mb-10">
         <h1 className="font-display text-4xl font-bold text-dark mb-3">Track Your Order</h1>
-        <p className="text-gray-500">Enter your order ID to see real-time status</p>
+        <p className="text-gray-500">Use your Order ID or phone number to check your order status</p>
       </div>
 
       {/* Search */}
-      <div className="flex gap-3 mb-10 max-w-lg mx-auto">
-        <input
-          value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          placeholder="Enter Order ID (e.g. #A1B2C3D4)"
-          className="input flex-1"
-          onKeyDown={(e) => e.key === 'Enter' && setSearchId(orderId.replace('#', ''))}
-        />
-        <button onClick={() => setSearchId(orderId.replace('#', ''))} className="btn-primary">Track</button>
+      <div className="max-w-lg mx-auto mb-10">
+        <div className="flex rounded-xl overflow-hidden border border-gray-200 mb-3">
+          <button
+            onClick={() => setSearchMode('id')}
+            className={`flex-1 py-2 text-sm font-medium transition ${searchMode === 'id' ? 'bg-mango text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+          >Order ID</button>
+          <button
+            onClick={() => setSearchMode('phone')}
+            className={`flex-1 py-2 text-sm font-medium transition ${searchMode === 'phone' ? 'bg-mango text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+          >Phone Number</button>
+        </div>
+        <div className="flex gap-3">
+          <input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder={searchMode === 'id' ? 'Enter Order ID (e.g. #A1B2C3D4)' : 'Enter phone number (e.g. 03001234567)'}
+            className="input flex-1"
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <button onClick={handleSearch} className="btn-primary">Track</button>
+        </div>
       </div>
 
       {isLoading && <Loader />}
-      {isError && <p className="text-center text-red-500">Order not found. Check your order ID.</p>}
+      {isError && <p className="text-center text-red-500">Not found. Please check and try again.</p>}
+
+      {/* Phone search results — show list of orders */}
+      {!isLoading && searchPhone && phoneOrders.length > 0 && !order && (
+        <div className="space-y-3 mb-8">
+          <p className="text-gray-600 font-medium">Found {phoneOrders.length} order(s) for this number:</p>
+          {phoneOrders.map((o) => (
+            <button
+              key={o._id}
+              onClick={() => { setSearchMode('id'); setInputValue(o._id); setSearchId(o._id); setSearchPhone(''); }}
+              className="w-full bg-white rounded-xl shadow-card p-4 flex justify-between items-center hover:shadow-md transition text-left"
+            >
+              <div>
+                <p className="font-bold text-dark font-mono">#{o._id.slice(-8).toUpperCase()}</p>
+                <p className="text-sm text-gray-500">{formatDate(o.createdAt)} · {o.items.length} item(s)</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-dark">{formatPrice(o.totalAmount)}</p>
+                <span className="text-xs bg-mango/10 text-mango px-2 py-0.5 rounded-full capitalize">{o.orderStatus}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+      {!isLoading && searchPhone && phoneOrders.length === 0 && !phoneLoading && (
+        <p className="text-center text-red-500">No orders found for this phone number.</p>
+      )}
 
       {order && (
         <div className="space-y-6">
