@@ -145,7 +145,10 @@ export default function ProductDetailPage() {
           <div className="bg-cream rounded-xl p-4 space-y-2 text-sm">
             {product.sku && <div className="flex gap-3"><span className="text-gray-500 w-24">SKU:</span><span className="font-medium">{product.sku}</span></div>}
             {product.weight && <div className="flex gap-3"><span className="text-gray-500 w-24">Weight:</span><span className="font-medium">{product.weight}</span></div>}
-            <div className="flex gap-3"><span className="text-gray-500 w-24">Delivery:</span><span className="font-medium">Free on orders above Rs. 3,000</span></div>
+            {product.expectedDelivery && (
+              <div className="flex gap-3"><span className="text-gray-500 w-24">Est. Delivery:</span><span className="font-medium text-green-600">🚚 {product.expectedDelivery}</span></div>
+            )}
+            <div className="flex gap-3"><span className="text-gray-500 w-24">Free Ship:</span><span className="font-medium">On orders above Rs. 3,000</span></div>
             <div className="flex gap-3"><span className="text-gray-500 w-24">Payment:</span><span className="font-medium">JazzCash · EasyPaisa · Card · COD</span></div>
           </div>
         </div>

@@ -17,6 +17,9 @@ export default function CartItem({ item }) {
           {item.product?.name}
         </Link>
         {item.variant && <p className="text-gray-400 text-xs mt-1">{item.variant}</p>}
+        {item.product?.expectedDelivery && (
+          <p className="text-green-600 text-xs mt-1">🚚 {item.product.expectedDelivery}</p>
+        )}
         <div className="flex items-center justify-between mt-3">
           <QuantityControl
             qty={item.qty}

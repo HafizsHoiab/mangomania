@@ -32,6 +32,7 @@ export default function AdminEditProduct() {
         isActive: product.isActive !== false,
         isPreOrder: product.isPreOrder || false,
         preOrderNote: product.preOrderNote || '',
+        expectedDelivery: product.expectedDelivery || '',
         images: product.images?.length ? product.images : [{ url: '', public_id: '' }],
       })
     }
@@ -77,6 +78,11 @@ export default function AdminEditProduct() {
                 <option value="">Select Category</option>
                 {categories.map(c => <option key={c._id} value={c._id}>{c.icon} {c.name}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark mb-1">Expected Delivery</label>
+              <input name="expectedDelivery" value={form.expectedDelivery} onChange={handleChange} className="input" placeholder="e.g. 2-3 business days / Same day in Multan" />
+              <p className="text-xs text-gray-400 mt-1">Shown to customer in cart and checkout</p>
             </div>
           </div>
           <div className="card space-y-4">

@@ -27,6 +27,7 @@ const productSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   isPreOrder: { type: Boolean, default: false },
   preOrderNote: { type: String, default: '' },
+  expectedDelivery: { type: String, default: '' },
   tags: [String],
   sku: String,
 }, { timestamps: true });

@@ -16,7 +16,7 @@ export default function AdminAddProduct() {
   const categories = catData?.data || []
 
   const [form, setForm] = useState({
-    name: '', description: '', price: '', salePrice: '', category: '', stock: 0, weight: '', sku: '', isFeatured: false, isActive: true, isPreOrder: false, preOrderNote: '',
+    name: '', description: '', price: '', salePrice: '', category: '', stock: 0, weight: '', sku: '', isFeatured: false, isActive: true, isPreOrder: false, preOrderNote: '', expectedDelivery: '',
     images: [{ url: '', public_id: '' }],
   })
 
@@ -105,6 +105,11 @@ export default function AdminAddProduct() {
             <div>
               <label className="block text-sm font-medium text-dark mb-1">SKU</label>
               <input name="sku" value={form.sku} onChange={handleChange} className="input" placeholder="MNG-001" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark mb-1">Expected Delivery</label>
+              <input name="expectedDelivery" value={form.expectedDelivery} onChange={handleChange} className="input" placeholder="e.g. 2-3 business days / Same day in Multan" />
+              <p className="text-xs text-gray-400 mt-1">Shown to customer in cart and checkout</p>
             </div>
           </div>
 
