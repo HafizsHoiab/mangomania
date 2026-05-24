@@ -33,7 +33,11 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return
-    dispatch(addItem({ product, qty, variant: selectedVariant?.label }))
+    if (product.variants?.length > 0 && !selectedVariant) {
+      toast.error('Please select a box size first')
+      return
+    }
+    dispatch(addItem({ product, qty, variant: selectedVariant?.label, price: selectedVariant?.price || product.salePrice || product.price }))
     toast.success(`${product.name} added to cart 🥭`)
   }
 
