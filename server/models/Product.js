@@ -14,6 +14,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String, required: true },
   price: { type: Number, required: true, min: 0 },
   salePrice: { type: Number, min: 0 },
+  costPrice: { type: Number, min: 0, default: 0 },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   images: [{ url: String, public_id: String }],
   stock: { type: Number, default: 0, min: 0 },

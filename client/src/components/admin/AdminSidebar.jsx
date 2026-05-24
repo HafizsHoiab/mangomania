@@ -8,6 +8,7 @@ const LINKS = [
   { to: '/admin/customers', label: 'Customers', icon: '👥' },
   { to: '/admin/coupons', label: 'Coupons', icon: '🎟️' },
   { to: '/admin/reviews', label: 'Reviews', icon: '⭐' },
+  { to: '/admin/expenses', label: 'Expenses', icon: '💸' },
   { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ]
 

@@ -16,7 +16,7 @@ export default function AdminAddProduct() {
   const categories = catData?.data || []
 
   const [form, setForm] = useState({
-    name: '', description: '', price: '', salePrice: '', category: '', stock: 0, weight: '', sku: '', isFeatured: false, isActive: true, isPreOrder: false, preOrderNote: '', expectedDelivery: '',
+    name: '', description: '', price: '', salePrice: '', costPrice: '', category: '', stock: 0, weight: '', sku: '', isFeatured: false, isActive: true, isPreOrder: false, preOrderNote: '', expectedDelivery: '',
     images: [{ url: '', public_id: '' }],
   })
 
@@ -67,6 +67,7 @@ export default function AdminAddProduct() {
       } else {
         payload.price = Number(form.price)
         payload.stock = Number(form.stock)
+        payload.costPrice = form.costPrice ? Number(form.costPrice) : 0
       }
 
       await createProduct(payload).unwrap()
@@ -179,6 +180,10 @@ export default function AdminAddProduct() {
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1">Weight</label>
                   <input name="weight" value={form.weight} onChange={handleChange} className="input" placeholder="1 kg" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark mb-1">Cost Price (Rs.) <span className="text-gray-400 font-normal">— for profit calc</span></label>
+                  <input name="costPrice" type="number" value={form.costPrice} onChange={handleChange} className="input" placeholder="800" />
                 </div>
               </div>
             )}

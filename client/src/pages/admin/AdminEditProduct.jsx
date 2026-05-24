@@ -33,6 +33,7 @@ export default function AdminEditProduct() {
         isPreOrder: product.isPreOrder || false,
         preOrderNote: product.preOrderNote || '',
         expectedDelivery: product.expectedDelivery || '',
+        costPrice: product.costPrice || '',
         images: product.images?.length ? product.images : [{ url: '', public_id: '' }],
       })
     }
@@ -91,6 +92,7 @@ export default function AdminEditProduct() {
               <div><label className="block text-sm font-medium text-dark mb-1">Sale Price</label><input name="salePrice" type="number" value={form.salePrice} onChange={handleChange} className="input" /></div>
               <div><label className="block text-sm font-medium text-dark mb-1">Stock</label><input name="stock" type="number" value={form.stock} onChange={handleChange} required className="input" /></div>
               <div><label className="block text-sm font-medium text-dark mb-1">Weight</label><input name="weight" value={form.weight} onChange={handleChange} className="input" /></div>
+              <div><label className="block text-sm font-medium text-dark mb-1">Cost Price (Rs.) <span className="text-gray-400 font-normal text-xs">— for profit calc</span></label><input name="costPrice" type="number" value={form.costPrice} onChange={handleChange} className="input" placeholder="800" /></div>
             </div>
           </div>
           <div className="card space-y-4">

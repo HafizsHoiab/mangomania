@@ -16,6 +16,7 @@ const couponRoutes = require('./routes/coupon.routes');
 const adminRoutes = require('./routes/admin.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const categoryRoutes = require('./routes/category.routes');
+const expenseRoutes = require('./routes/expense.routes');
 
 connectDB();
 
@@ -45,6 +46,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 app.use(errorMiddleware);
 

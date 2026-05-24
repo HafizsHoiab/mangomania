@@ -9,6 +9,7 @@ import { cartApi } from '../services/cartApi.js'
 import { reviewApi } from '../services/reviewApi.js'
 import { adminApi } from '../services/adminApi.js'
 import { paymentApi } from '../services/paymentApi.js'
+import { expenseApi } from '../services/expenseApi.js'
 
 const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ const store = configureStore({
     [reviewApi.reducerPath]: reviewApi.reducer,
     [adminApi.reducerPath]: adminApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
+    [expenseApi.reducerPath]: expenseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -32,6 +34,7 @@ const store = configureStore({
       reviewApi.middleware,
       adminApi.middleware,
       paymentApi.middleware,
+      expenseApi.middleware,
     ),
 })
 

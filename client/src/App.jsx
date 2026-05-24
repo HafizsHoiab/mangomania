@@ -28,6 +28,7 @@ const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers.jsx'))
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons.jsx'))
 const AdminReviews = lazy(() => import('./pages/admin/AdminReviews.jsx'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'))
+const AdminExpenses = lazy(() => import('./pages/admin/AdminExpenses.jsx'))
 
 function AdminLayout() {
   return (
@@ -43,6 +44,7 @@ function AdminLayout() {
           <Route path="/coupons" element={<AdminCoupons />} />
           <Route path="/reviews" element={<AdminReviews />} />
           <Route path="/settings" element={<AdminSettings />} />
+          <Route path="/expenses" element={<AdminExpenses />} />
         </Routes>
       </Suspense>
     </div>
