@@ -14,7 +14,7 @@ export default function Footer() {
               Pakistan's finest desi store from the heart of Multan. Bringing you premium mangoes, authentic dairy, traditional sweets, and beloved desi pantry staples — delivered to your doorstep.
             </p>
             <p className="text-sm">📍 Multan, Punjab, Pakistan</p>
-            <p className="text-sm">📞 +92-313-7752633</p>
+            <p className="text-sm">📞 +92-370-0044688</p>
             <p className="text-sm">✉️ hello@mangomania.pk</p>
           </div>
           <div>
@@ -31,8 +31,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/track-order" className="hover:text-mango transition">Track Order</Link></li>
               <li><Link to="/profile" className="hover:text-mango transition">My Account</Link></li>
-              <li><a href="tel:+923137752633" className="hover:text-mango transition">Call Us</a></li>
-              <li><a href="https://wa.me/923137752633" target="_blank" rel="noreferrer" className="hover:text-mango transition">WhatsApp</a></li>
+              <li><a href="tel:+923700044688" className="hover:text-mango transition">Call Us</a></li>
+              <li><a href="https://wa.me/923700044688" target="_blank" rel="noreferrer" className="hover:text-mango transition">WhatsApp</a></li>
             </ul>
           </div>
         </div>

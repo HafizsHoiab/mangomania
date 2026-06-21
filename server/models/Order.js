@@ -35,7 +35,7 @@ const orderSchema = new mongoose.Schema({
   shippingAddress: shippingAddressSchema,
   paymentMethod: {
     type: String,
-    enum: ['jazzcash', 'easypaisa', 'card', 'cod'],
+    enum: ['jazzcash', 'easypaisa', 'card', 'cod', 'manual'],
     required: true,
   },
   paymentStatus: {
