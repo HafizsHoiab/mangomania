@@ -42,7 +42,8 @@ export default function Footer() {
             <span>Pay with:</span>
             <span className="bg-gray-700 px-2 py-1 rounded text-xs">JazzCash</span>
             <span className="bg-gray-700 px-2 py-1 rounded text-xs">EasyPaisa</span>
-            <span className="bg-gray-700 px-2 py-1 rounded text-xs">Visa/MC</span>
+            <span className="bg-gray-700 px-2 py-1 rounded text-xs">SadaPay</span>
+            <span className="bg-gray-700 px-2 py-1 rounded text-xs">Bank Transfer</span>
             <span className="bg-gray-700 px-2 py-1 rounded text-xs">COD</span>
           </div>
         </div>

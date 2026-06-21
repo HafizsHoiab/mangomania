@@ -1,11 +1,3 @@
-const METHODS = [
-  { id: 'manual', label: 'Manual Transfer', icon: '🏦', desc: 'JazzCash / EasyPaisa / SadaPay / Bank — send slip on WhatsApp' },
-  { id: 'jazzcash', label: 'JazzCash (Online)', icon: '📱', desc: 'Pay with JazzCash mobile wallet or MPIN' },
-  { id: 'easypaisa', label: 'EasyPaisa (Online)', icon: '💚', desc: 'Pay via EasyPaisa mobile account' },
-  { id: 'card', label: 'Credit/Debit Card', icon: '💳', desc: 'Visa, Mastercard via Stripe' },
-  { id: 'cod', label: 'Cash on Delivery', icon: '💵', desc: 'Pay when your order arrives' },
-]
-
 const ACCOUNTS = [
   { label: 'JazzCash', icon: '📱', number: '03032073062', name: 'Moiz Imran' },
   { label: 'EasyPaisa', icon: '💚', number: '03032073062', name: 'Moiz Imran' },
@@ -18,6 +10,11 @@ const BANK = {
   iban: 'PK15MEZN0060010113456250',
   bank: 'Meezan Bank',
 }
+
+const METHODS = [
+  { id: 'manual', label: 'Bank / Wallet Transfer', icon: '🏦', desc: 'JazzCash · EasyPaisa · SadaPay · Bank — send slip on WhatsApp' },
+  { id: 'cod', label: 'Cash on Delivery', icon: '💵', desc: 'Pay when your order arrives at your door' },
+]
 
 export default function PaymentOptions({ selected, onSelect }) {
   return (
@@ -33,35 +30,32 @@ export default function PaymentOptions({ selected, onSelect }) {
             </div>
           </label>
 
-          {/* Manual transfer account details */}
           {m.id === 'manual' && selected === 'manual' && (
             <div className="mt-2 mx-1 bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4">
               <p className="text-sm font-semibold text-blue-800">📋 Transfer to any of these accounts:</p>
 
-              {/* Mobile wallets */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {ACCOUNTS.map(acc => (
-                  <div key={acc.label} className="bg-white rounded-xl p-3 border border-blue-100">
+                  <div key={acc.label} className="bg-white rounded-xl p-3 border border-blue-100 text-center">
                     <p className="text-xs font-bold text-gray-500 mb-1">{acc.icon} {acc.label}</p>
-                    <p className="font-bold text-dark text-lg tracking-wide">{acc.number}</p>
+                    <p className="font-bold text-dark text-base tracking-wide">{acc.number}</p>
                     <p className="text-xs text-gray-500">{acc.name}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Bank account */}
               <div className="bg-white rounded-xl p-3 border border-blue-100">
                 <p className="text-xs font-bold text-gray-500 mb-2">🏦 Bank Transfer — {BANK.bank}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm">
-                  <div><span className="text-gray-400">Name: </span><span className="font-semibold text-dark">{BANK.name}</span></div>
-                  <div><span className="text-gray-400">Account: </span><span className="font-semibold text-dark">{BANK.account}</span></div>
-                  <div className="sm:col-span-2"><span className="text-gray-400">IBAN: </span><span className="font-semibold text-dark font-mono text-xs">{BANK.iban}</span></div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-400">Name</span><span className="font-semibold text-dark">{BANK.name}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Account No.</span><span className="font-semibold text-dark">{BANK.account}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">IBAN</span><span className="font-semibold text-dark font-mono text-xs">{BANK.iban}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Bank</span><span className="font-semibold text-dark">{BANK.bank}</span></div>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-xs text-amber-800 font-semibold">📲 After transfer:</p>
-                <p className="text-xs text-amber-700 mt-1">Place your order below, then send your payment slip on WhatsApp. Your order will be confirmed once we verify the payment.</p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                📲 After transferring, place your order below and send your payment screenshot on WhatsApp. Your order will be confirmed once we verify the payment.
               </div>
             </div>
           )}
